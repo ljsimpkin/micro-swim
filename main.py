@@ -38,25 +38,34 @@ def disco_mode(duration=5):
 def connect_wifi():
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
-    wlan.connect(SSID, PASSWORD)
-
-    print("Connecting to Wi-Fi...")
-    timeout = 10  # Max time to wait for connection
-
-    while not wlan.isconnected() and timeout > 0:
-        print("Waiting for connection...")
-        ONBOARD_LED.toggle()  # Flash onboard LED
-        time.sleep(1)
-        timeout -= 1
-
-    if wlan.isconnected():
-        print("Connected! IP:", wlan.ifconfig()[0])
-        ONBOARD_LED.on()  # Keep onboard LED ON when connected
-        return True
-    else:
-        print("Failed to connect to Wi-Fi.")
-        ONBOARD_LED.off()
-        return False
+    
+    # Try Android credentials first, then iPhone
+    credentials = [
+        (SSID_ANDROID, PASSWORD_ANDROID),
+        (SSID_IPHONE, PASSWORD_IPHONE)
+    ]
+    
+    for ssid, password in credentials:
+        print(f"Trying to connect to {ssid}...")
+        wlan.connect(ssid, password)
+        
+        timeout = 10  # Max time to wait for connection
+        while not wlan.isconnected() and timeout > 0:
+            print("Waiting for connection...")
+            ONBOARD_LED.toggle()  # Flash onboard LED
+            time.sleep(1)
+            timeout -= 1
+            
+        if wlan.isconnected():
+            print(f"Connected to {ssid}! IP:", wlan.ifconfig()[0])
+            ONBOARD_LED.on()  # Keep onboard LED ON when connected
+            return True
+            
+        print(f"Failed to connect to {ssid}")
+    
+    print("Failed to connect to any network")
+    ONBOARD_LED.off()
+    return False
 
 # Function to check website data and control RGB LED
 def check_website():
