@@ -5,9 +5,6 @@ import random
 from machine import Pin, PWM
 from env import SSID_IPHONE, PASSWORD_IPHONE, SSID_ANDROID, PASSWORD_ANDROID
 
-# Website URL (Replace with your API/website)
-URL = "https://liamsimpkin.com/pico/"  # Should return 0, 1, or 69
-
 # Setup PWM for RGB LED
 RED = PWM(Pin(16))
 GREEN = PWM(Pin(17))
@@ -66,38 +63,6 @@ def connect_wifi():
     print("Failed to connect to any network")
     ONBOARD_LED.off()
     return False
-
-# Function to check website data and control RGB LED
-def check_website():
-    try:
-        print("checking website")
-        response = urequests.get(URL)
-        if response.status_code != 200:
-            print("Error: HTTP status code", response.status_code)
-            response.close()
-            set_color(0, 0, 0)  # Turn off LED on error
-            return
-        data = response.text.strip()  # Get raw text and remove whitespace
-        response.close()
-
-        print("Website Response:", data)
-
-        if data == "0":
-            set_color(65535, 0, 0)  # Red
-            print("LED: Red (0)")
-        elif data == "1":
-            set_color(0, 0, 65535)  # Green
-            print("LED: Green (1)")
-        elif data == "69":
-            print("LED: Disco Mode! (69)")
-            disco_mode()
-        else:
-            set_color(0, 0, 0)  # Off (unknown response)
-            print("LED: Off (Unknown response)")
-
-    except Exception as e:
-        print("Error:", e)
-        set_color(0, 0, 0)  # Turn off RGB LED in case of error
         
 def monitor_wifi():
     wlan = network.WLAN(network.STA_IF)
@@ -148,6 +113,5 @@ if connect_wifi():  # Only run if connected
     while True:
         monitor_wifi()
         check_bay("Murrays Bay")
-        # check_website()
         time.sleep(5)  # Check every 5 seconds
 
