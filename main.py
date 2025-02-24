@@ -3,7 +3,7 @@ import urequests
 import time
 import random
 from machine import Pin, PWM
-from config import SSID_IPHONE, PASSWORD_IPHONE, SSID_ANDROID, PASSWORD_ANDROID
+from env import SSID_IPHONE, PASSWORD_IPHONE, SSID_ANDROID, PASSWORD_ANDROID
 
 # Website URL (Replace with your API/website)
 URL = "https://liamsimpkin.com/pico/"  # Should return 0, 1, or 69
