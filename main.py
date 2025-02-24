@@ -113,5 +113,5 @@ if connect_wifi():  # Only run if connected
     while True:
         monitor_wifi()
         check_bay("Murrays Bay")
-        time.sleep(5)  # Check every 5 seconds
+        time.sleep(3600)  # Check every hour
 
