@@ -1,6 +1,6 @@
 # Safeswim Bay Monitor
 
-A MicroPython project for Raspberry Pi Pico that monitors swimming conditions at Murrays Bay using the Safeswim API and displays the status via an RGB LED.
+A MicroPython project for Raspberry Pi Pico that monitors swimming conditions at Auckland Bays using the Safeswim API and displays the status via an RGB LED.
 
 ## Features
 
