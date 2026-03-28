@@ -99,7 +99,7 @@ def monitor_wifi():
         set_color(0, 0, 0)
         connect_wifi()  # Flash LED if disconnected
 
-def check_bay(name):
+def check_bay(name, api_refresh_time):
     try:
         response = urequests.get("https://safeswim.org.nz/api/locations")
         if response.status_code != 200:
@@ -127,7 +127,7 @@ def check_bay(name):
         elif quality == "BLACK":
             print("LED: Black (flashing red)")
             start_time = time.time()
-            while time.time() - start_time < 5:
+            while time.time() - start_time < api_refresh_time:
                 set_color(65535, 0, 0)
                 time.sleep(0.1)
                 set_color(0, 0, 0)
@@ -143,8 +143,8 @@ def check_bay(name):
 # Main Loop
 if connect_wifi():  # Only run if connected
     while True:
+        api_refresh_time = 2000 # Refresh every 20 minutes
         monitor_wifi()
-        check_bay("Murrays Bay")
+        check_bay("Murrays Bay", api_refresh_time)
         # check_website()
-        time.sleep(5)  # Check every 5 seconds
 
