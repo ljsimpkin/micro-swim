@@ -3,7 +3,10 @@ import urequests
 import time
 import random
 from machine import Pin, PWM
-from env import SSID_IPHONE, PASSWORD_IPHONE, SSID_ANDROID, PASSWORD_ANDROID
+from env import SSID, PASSWORD
+
+# Website URL (Replace with your API/website)
+URL = "https://liamsimpkin.com/pico/"  # Should return 0, 1, or 69
 
 # Setup PWM for RGB LED
 RED = PWM(Pin(16))
@@ -35,34 +38,58 @@ def disco_mode(duration=5):
 def connect_wifi():
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
-    
-    # Try Android credentials first, then iPhone
-    credentials = [
-        (SSID_ANDROID, PASSWORD_ANDROID),
-        (SSID_IPHONE, PASSWORD_IPHONE)
-    ]
-    
-    for ssid, password in credentials:
-        print(f"Trying to connect to {ssid}...")
-        wlan.connect(ssid, password)
-        
-        timeout = 10  # Max time to wait for connection
-        while not wlan.isconnected() and timeout > 0:
-            print("Waiting for connection...")
-            ONBOARD_LED.toggle()  # Flash onboard LED
-            time.sleep(1)
-            timeout -= 1
-            
-        if wlan.isconnected():
-            print(f"Connected to {ssid}! IP:", wlan.ifconfig()[0])
-            ONBOARD_LED.on()  # Keep onboard LED ON when connected
-            return True
-            
-        print(f"Failed to connect to {ssid}")
-    
-    print("Failed to connect to any network")
-    ONBOARD_LED.off()
-    return False
+    wlan.connect(SSID, PASSWORD)
+
+    print("Connecting to Wi-Fi...")
+    timeout = 20  # Max time to wait for connection
+
+    while not wlan.isconnected() and timeout > 0:
+        status = wlan.status()
+        print(f"Waiting... status={status}, timeout={timeout}")
+        ONBOARD_LED.toggle()  # Flash onboard LED
+        time.sleep(1)
+        timeout -= 1
+
+    if wlan.isconnected():
+        print("Connected! IP:", wlan.ifconfig()[0])
+        ONBOARD_LED.on()  # Keep onboard LED ON when connected
+        return True
+    else:
+        print("Failed to connect to Wi-Fi.")
+        ONBOARD_LED.off()
+        return False
+
+# Function to check website data and control RGB LED
+def check_website():
+    try:
+        print("checking website")
+        response = urequests.get(URL)
+        if response.status_code != 200:
+            print("Error: HTTP status code", response.status_code)
+            response.close()
+            set_color(0, 0, 0)  # Turn off LED on error
+            return
+        data = response.text.strip()  # Get raw text and remove whitespace
+        response.close()
+
+        print("Website Response:", data)
+
+        if data == "0":
+            set_color(65535, 0, 0)  # Red
+            print("LED: Red (0)")
+        elif data == "1":
+            set_color(0, 0, 65535)  # Green
+            print("LED: Green (1)")
+        elif data == "69":
+            print("LED: Disco Mode! (69)")
+            disco_mode()
+        else:
+            set_color(0, 0, 0)  # Off (unknown response)
+            print("LED: Off (Unknown response)")
+
+    except Exception as e:
+        print("Error:", e)
+        set_color(0, 0, 0)  # Turn off RGB LED in case of error
         
 def monitor_wifi():
     wlan = network.WLAN(network.STA_IF)
@@ -113,5 +140,6 @@ if connect_wifi():  # Only run if connected
     while True:
         monitor_wifi()
         check_bay("Murrays Bay")
-        time.sleep(3600)  # Check every hour
+        # check_website()
+        time.sleep(5)  # Check every 5 seconds
 
