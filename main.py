@@ -125,8 +125,13 @@ def check_bay(name):
             set_color(0, 0, 65535)  # Green
             print("LED: Green (1)")
         elif quality == "BLACK":
-            print("LED: BLACK")
-            disco_mode()
+            print("LED: Black (flashing red)")
+            start_time = time.time()
+            while time.time() - start_time < 5:
+                set_color(65535, 0, 0)
+                time.sleep(0.1)
+                set_color(0, 0, 0)
+                time.sleep(0.1)
         else:
             print("Unknown response")
             set_color(0, 0, 0)  # Turn off RGB LED in case of error
