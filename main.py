@@ -67,10 +67,14 @@ utime.sleep_ms(3)
 def connect_wifi():
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
+    utime.sleep(1)
     wlan.connect(SSID, PASSWORD)
     write_line(2, "WiFi...")
-    while not wlan.isconnected():
-        utime.sleep(0.5)
+    for _ in range(30):
+        if wlan.isconnected():
+            return
+        utime.sleep(1)
+    reset()
 
 # --- Tide fetch ---
 def fetch_next_tides():
