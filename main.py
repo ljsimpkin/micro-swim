@@ -119,21 +119,28 @@ def fmt_time(epoch):
     t = utime.localtime(epoch + UTC_OFFSET_HOURS * 3600)
     return "{:02d}:{:02d}".format(t[3], t[4])
 
-def tide_bar(next_high, next_low, now):
+def current_height(next_high, next_low, now):
     ht_epoch, ht_h = next_high
     lt_epoch, lt_h = next_low
     if ht_epoch < lt_epoch:
-        # rising: estimate previous low by mirroring the half-period
         next_ext = (ht_epoch, ht_h)
         prev_ext = (ht_epoch - (lt_epoch - ht_epoch), lt_h)
     else:
-        # falling: estimate previous high by mirroring the half-period
         next_ext = (lt_epoch, lt_h)
         prev_ext = (lt_epoch - (ht_epoch - lt_epoch), ht_h)
     t0, h0 = prev_ext
     t1, h1 = next_ext
-    frac   = max(0.0, min(1.0, (now - t0) / (t1 - t0)))
-    height = h0 + (h1 - h0) * (1 - math.cos(math.pi * frac)) / 2
+    frac = max(0.0, min(1.0, (now - t0) / (t1 - t0)))
+    return h0 + (h1 - h0) * (1 - math.cos(math.pi * frac)) / 2
+
+def safe_color(height):
+    frac = max(0.0, min(1.0, (height - TIDE_MIN) / (TIDE_MAX - TIDE_MIN)))
+    # frac=1 (high tide) → full physical green (b channel)
+    # frac=0 (low tide)  → full physical blue  (g channel)
+    return (0, round((1 - frac) * 65535), round(frac * 65535))
+
+def tide_bar(next_high, next_low, now):
+    height = current_height(next_high, next_low, now)
     fill   = round((height - TIDE_MIN) / (TIDE_MAX - TIDE_MIN) * 8)
     fill   = max(0, min(8, fill))
     if fill == 0:
@@ -162,10 +169,12 @@ while True:
         next_high, next_low, quality = fetch_next_tides()
         last_fetch = now
 
-    if quality == "GREEN":
-        set_color(0, 0, 65535)   # blue pin = green LED
-    elif quality in ("RED", "BLACK"):
+    if quality in ("RED", "BLACK"):
         set_color(65535, 0, 0)
+    elif quality == "GREEN" and next_high and next_low:
+        set_color(*safe_color(current_height(next_high, next_low, now)))
+    elif quality == "GREEN":
+        set_color(0, 0, 65535)   # fallback: solid green if no tide data yet
     else:
         set_color(0, 0, 0)
 
